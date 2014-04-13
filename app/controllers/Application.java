@@ -19,6 +19,12 @@ public class Application extends Controller {
     private static final int INPUT_ERROR = 0x01;
     private static final int USER_EXIST = 0x02;
 
+    private static final int STATUS_OK = 0x0;
+    private static final int STATUS_INPUT_JSON_ERROR = 0x1;
+    private static final int STATUS_EMPTY_ERROR = 0x2;
+    private static final int STATUS_USER_EXIST_ERROR = 0x3;
+    private static final int STATUS_AUTH_ERROR = 0x4;
+
     public static Result index() {
         return ok(index.render("Your new application is ready."));
     }
@@ -27,25 +33,38 @@ public class Application extends Controller {
         JsonNode json = request().body().asJson();
         ObjectNode result = Json.newObject();
         if (json == null) {
-            result.put("error", "Excepting JSON data");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_INPUT_JSON_ERROR);
+            errorJson.put("message", "Excepting JSON data");
+            result.put("error", errorJson);
             return badRequest(result);
         }
-        String username = json.findPath("username").textValue();
+        String username = json.findPath("name").textValue();
         String password = json.findPath("password").textValue();
         String email = json.findPath("email").textValue();
-        boolean gender = json.findPath("gender").booleanValue();
+        String genderStr = json.findPath("gender").textValue();
+        boolean gender = "Male".equals(genderStr);
         String phone = json.findPath("phone").textValue();
         // register new user
         int ret = newUser(username, password, email, gender, phone);
         if (ret == INPUT_ERROR) {
-            result.put("error", "Username or password is empty");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_EMPTY_ERROR);
+            errorJson.put("message", "Username or password is empty");
+            result.put("error", errorJson);
             return badRequest(result);
         } else if (ret == USER_EXIST) {
-            result.put("error",
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_USER_EXIST_ERROR);
+            errorJson.put("message",
                     "Username already exist, change another and retry");
+            result.put("error", errorJson);
             return badRequest(result);
         } else {
-            result.put("status", "OK, new user " + username + " is created");
+            ObjectNode statusJson = Json.newObject();
+            statusJson.put("status", STATUS_OK);
+            statusJson.put("message", "New user " + username + " is created.");
+            result.put("ok", statusJson);
             return ok(result);
         }
     }
@@ -54,30 +73,42 @@ public class Application extends Controller {
         JsonNode json = request().body().asJson();
         ObjectNode result = Json.newObject();
         if (json == null) {
-            result.put("error", "Excepting JSON data");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_INPUT_JSON_ERROR);
+            errorJson.put("message", "Excepting JSON data");
+            result.put("error", errorJson);
             return badRequest(result);
         }
-        String name = json.findPath("username").textValue();
+        String name = json.findPath("name").textValue();
         String pswd = json.findPath("password").textValue();
         if (TextUtils.isEmpty(name) || TextUtils.isEmpty(pswd)) {
-            result.put("error", "Username or password is empty");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_EMPTY_ERROR);
+            errorJson.put("message", "Username or password is empty");
+            result.put("error", errorJson);
             return badRequest(result);
         }
         User auth = User.authenticate(name, pswd);
         if (auth == null) {
-            result.put("error", "Username or password incorrect");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_AUTH_ERROR);
+            errorJson.put("message", "Username or password incorrect");
+            result.put("error", errorJson);
             return badRequest(result);
         }
-        result.put("username", auth.name);
-        result.put("password", auth.password);
-        result.put("email", auth.email);
-        result.put("phone", auth.phone);
-        result.put("photo", auth.photo);
-        result.put("gender", auth.gender);
-        result.put("created", auth.created.toString());
-        result.put("checkinCount", auth.checkin_count);
-        result.put("followerCount", auth.follower_count);
-        result.put("friendCount", auth.friend_count);
+        ObjectNode userJson = Json.newObject();
+        userJson.put("name", auth.name);
+        userJson.put("password", auth.password);
+        userJson.put("email", auth.email);
+        userJson.put("phone", auth.phone);
+        userJson.put("photo", auth.photo);
+        userJson.put("gender", auth.gender ? "Male" : "Female");
+        userJson.put("created", auth.created.toString());
+        userJson.put("checkinCount", auth.checkin_count);
+        userJson.put("followerCount", auth.follower_count);
+        userJson.put("friendCount", auth.friend_count);
+        // set user JSON as result content
+        result.put("ok", userJson);
         return ok(result);
     }
 

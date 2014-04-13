@@ -11,6 +11,9 @@ POST    /register                   controllers.Application.register()
 # Login
 POST    /login                      controllers.Application.login()
 
+# Checkin
+POST    /checkin                    controllers.Application.checkin()
+
 # List favorite places
 GET     /listFavorites:id           controllers.Application.listFavorites(id: Long)
 
