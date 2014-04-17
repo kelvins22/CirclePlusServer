@@ -1,6 +1,8 @@
 package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import models.Checkin;
@@ -13,6 +15,8 @@ import utils.MD5Utils;
 import utils.TextUtils;
 import views.html.index;
 
+import java.util.List;
+
 public class Application extends Controller {
 
     private static final int OP_OK = 0x0;
@@ -24,6 +28,8 @@ public class Application extends Controller {
     private static final int STATUS_EMPTY_ERROR = 0x2;
     private static final int STATUS_USER_EXIST_ERROR = 0x3;
     private static final int STATUS_AUTH_ERROR = 0x4;
+
+    // private static final int STATUS_CHECK_IN_ERROR = 0x5;
 
     public static Result index() {
         return ok(index.render("Your new application is ready."));
@@ -97,6 +103,7 @@ public class Application extends Controller {
             return badRequest(result);
         }
         ObjectNode userJson = Json.newObject();
+        userJson.put("id", auth.id);
         userJson.put("name", auth.name);
         userJson.put("password", auth.password);
         userJson.put("email", auth.email);
@@ -116,7 +123,10 @@ public class Application extends Controller {
         JsonNode json = request().body().asJson();
         ObjectNode result = Json.newObject();
         if (json == null) {
-            result.put("error", "Excepting JSON data");
+            ObjectNode errorJson = Json.newObject();
+            errorJson.put("status", STATUS_INPUT_JSON_ERROR);
+            errorJson.put("message", "Excepting JSON data");
+            result.put("error", errorJson);
             return badRequest(result);
         }
 
@@ -129,29 +139,83 @@ public class Application extends Controller {
         String city = json.findPath("city").textValue();
         String address = json.findPath("address").textValue();
         int type = json.findPath("type").intValue();
-        int locMd5 = newLoc(locName, lat, lng, nation, province, city, address,
-                type);
+        String locMd5 = newLoc(locName, lat, lng, nation, province, city,
+                address, type);
 
         // about checkin
-        long locId = Loc.findByMd5(locMd5).id;
+        long locId = Loc.checkExistence(locMd5).id;
         String checkinName = json.findPath("checkinName").textValue();
         String shout = json.findPath("shout").textValue();
+        int score = 5;
         long userId = json.findPath("userId").longValue();
 
         // make a checkin object
         Checkin checkin = new Checkin();
         checkin.name = checkinName;
         checkin.shout = shout;
+        checkin.score = score;
+        checkin.created = new java.util.Date();
         checkin.user_id = userId;
         checkin.loc_id = locId;
         Checkin.create(checkin);
 
-        result.put("status", checkinName + " checkin");
+        ObjectNode statusJson = Json.newObject();
+        statusJson.put("status", STATUS_OK);
+        statusJson.put("message", checkinName + " checkin");
+        result.put("ok", statusJson);
         return ok(result);
     }
 
-    public static Result listFavorites(long id) {
+    public static Result listFavorites() {
+        long id = 0L;
+        try {
+            id = Long.parseLong(request().getQueryString("id"));
+        } catch (NumberFormatException e) {
+            System.out.println(e.toString());
+        }
+
         ObjectNode result = Json.newObject();
+        List<Checkin> list = Checkin.page(0, 20, "created", "DESC",
+                String.valueOf(id)).getList();
+
+        ArrayNode array = new ArrayNode(JsonNodeFactory.instance);
+        for (Checkin checkin : list) {
+            Loc loc = Loc.find.ref(checkin.loc_id);
+            ObjectNode locJson = Json.newObject();
+            locJson.put("address", loc.address);
+            locJson.put("city", loc.city);
+            locJson.put("id", loc.id);
+            locJson.put("lat", loc.lat);
+            locJson.put("lng", loc.lng);
+            locJson.put("name", loc.name);
+            locJson.put("nation", loc.nation);
+            locJson.put("province", loc.province);
+            locJson.put("type", loc.type);
+
+            User user = User.find.ref(checkin.user_id);
+            ObjectNode userJson = Json.newObject();
+            userJson.put("checkinCount", user.checkin_count);
+            userJson.put("created", user.created.toString());
+            userJson.put("email", user.email);
+            userJson.put("followerCount", user.follower_count);
+            userJson.put("friendCount", user.friend_count);
+            userJson.put("gender", user.gender ? "Male" : "Female");
+            userJson.put("id", user.id);
+            userJson.put("name", user.name);
+            userJson.put("phone", user.phone);
+            userJson.put("photo", user.photo);
+
+            ObjectNode checkInJson = Json.newObject();
+            checkInJson.put("created", checkin.created.toString());
+            checkInJson.put("id", checkin.id);
+            checkInJson.put("name", checkin.name);
+            checkInJson.put("shout", checkin.shout);
+            checkInJson.put("loc", locJson);
+            checkInJson.put("user", userJson);
+
+            array.add(checkInJson);
+        }
+        result.put("ok", array);
         return ok(result);
     }
 
@@ -173,15 +237,16 @@ public class Application extends Controller {
         return OP_OK;
     }
 
-    private static int newLoc(String name, long lat, long lng, String nation,
-            String province, String city, String address, int type) {
+    private static String newLoc(String name, long lat, long lng,
+            String nation, String province, String city, String address,
+            int type) {
         String key = MD5Utils.generateLocKey(name, lat, lng, nation, province,
                 city, address);
-        int md5 = MD5Utils.hashKey(key);
+        String md5 = MD5Utils.hashKey(key);
         if (Loc.checkExistence(md5) == null) {
             Loc loc = new Loc(name, lat, lng, nation, province, city, address,
-                    md5);
-            loc.type = type;
+                    type, md5);
+            loc.created = new java.util.Date();
             Loc.create(loc);
         }
         return md5;

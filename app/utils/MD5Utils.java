@@ -12,14 +12,14 @@ public class MD5Utils {
      *            original key to hash
      * @return the hash key
      */
-    public static int hashKey(String key) {
-        int cacheKey;
+    public static String hashKey(String key) {
+        String cacheKey;
         try {
             final MessageDigest mDigest = MessageDigest.getInstance("MD5");
             mDigest.update(key.getBytes());
-            cacheKey = Integer.parseInt(bytesToHexString(mDigest.digest()));
+            cacheKey = bytesToHexString(mDigest.digest());
         } catch (NoSuchAlgorithmException e) {
-            cacheKey = key.hashCode();
+            cacheKey = String.valueOf(key.hashCode());
         }
         return cacheKey;
     }

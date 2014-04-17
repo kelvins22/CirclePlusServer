@@ -26,6 +26,7 @@ public class Checkin extends Model {
     public java.util.Date created;
 
     public String shout;
+    public int score;
 
     public Long user_id;
     public Long loc_id;
@@ -66,9 +67,8 @@ public class Checkin extends Model {
      *            Filter applied on the name column
      */
     public static Page<Checkin> page(int page, int pageSize, String sortBy,
-            String order, String filter) {
-        return find.where().ilike("name", "%" + filter + "%")
-                .orderBy(sortBy + " " + order).fetch("user")
+            String order, String userId) {
+        return find.where().eq("user_id", userId).orderBy(sortBy + " " + order)
                 .findPagingList(pageSize).setFetchAhead(false).getPage(page);
     }
 }

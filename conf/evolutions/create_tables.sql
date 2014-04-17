@@ -24,6 +24,7 @@ CREATE TABLE location (
     city        VARCHAR(31),
     address     VARCHAR(255),
     type        INT,
+    md5         TEXT,
     reserved    TEXT,
     CONSTRAINT pk_location PRIMARY KEY (id)
 );
@@ -33,6 +34,7 @@ CREATE TABLE checkin (
     name        VARCHAR(255),
     created     TIMESTAMP,
     shout       TEXT,
+    score       INT,
     user_id     BIGINT NOT NULL,
     loc_id      BIGINT NOT NULL,
     CONSTRAINT pk_checkin PRIMARY KEY (id)
