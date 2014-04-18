@@ -26,6 +26,7 @@ public class User extends Model {
     public String photo;
 
     public boolean gender;
+    public boolean is_business;
 
     @Column(name = "created")
     public java.util.Date created;

@@ -4,6 +4,7 @@ CREATE TABLE user (
     password    VARCHAR(31),
     email       VARCHAR(31),
     gender      BOOL,               # male true, female false
+    is_business BOOL,               # if manage a loc
     phone       CHAR(13),           # xx-yyy-yyyy-yyyy
     photo       TEXT,               # photo url
     created     TIMESTAMP,
@@ -14,7 +15,7 @@ CREATE TABLE user (
     CONSTRAINT pk_user PRIMARY KEY (id)
 );
 
-CREATE TABLE location (
+CREATE TABLE loc (
     id          BIGINT NOT NULL,
     name        VARCHAR(255),
     lat         BIGINT NOT NULL,
@@ -40,8 +41,21 @@ CREATE TABLE checkin (
     CONSTRAINT pk_checkin PRIMARY KEY (id)
 );
 
+create table business (
+    id            bigint auto_increment not null,
+    name          varchar(255),
+    created       datetime,
+    user_id       bigint,
+    loc_id        bigint,
+    checkin_count int,
+    constraint pk_checkin primary key (id)
+);
+
 ALTER TABLE checkin ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
-ALTER TABLE checkin ADD CONSTRAINT fk_loc FOREIGN KEY (loc_id) REFERENCES location (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE checkin ADD CONSTRAINT fk_loc FOREIGN KEY (loc_id) REFERENCES loc (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 CREATE INDEX idx_checkin_user ON user (id);
+
+ALTER TABLE business ADD CONSTRAINT b_fk_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE business ADD CONSTRAINT b_fk_loc FOREIGN KEY (loc_id) REFERENCES loc (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
 

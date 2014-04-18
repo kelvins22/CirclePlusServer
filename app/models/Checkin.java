@@ -66,9 +66,15 @@ public class Checkin extends Model {
      * @param filter
      *            Filter applied on the name column
      */
-    public static Page<Checkin> page(int page, int pageSize, String sortBy,
-            String order, String userId) {
+    public static Page<Checkin> pageByUser(int page, int pageSize,
+            String sortBy, String order, String userId) {
         return find.where().eq("user_id", userId).orderBy(sortBy + " " + order)
+                .findPagingList(pageSize).setFetchAhead(false).getPage(page);
+    }
+
+    public static Page<Checkin> pageByLoc(int page, int pageSize,
+            String sortBy, String order, String locId) {
+        return find.where().eq("loc_id", locId).orderBy(sortBy + " " + order)
                 .findPagingList(pageSize).setFetchAhead(false).getPage(page);
     }
 }
