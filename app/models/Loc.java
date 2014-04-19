@@ -1,5 +1,8 @@
 package models;
 
+import com.avaje.ebean.RawSql;
+import com.avaje.ebean.RawSqlBuilder;
+
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
 
@@ -69,6 +72,14 @@ public class Loc extends Model {
 
     public static List<Loc> all() {
         return find.all();
+    }
+
+    public static List<Loc> getBusinessLoc() {
+        String sql = "SELECT loc.id, loc.name, loc.nation, loc.province, "
+                + "loc.city, loc.address, loc.lat, loc.lng, loc.type "
+                + "FROM loc INNER JOIN business ON loc.id = business.loc_id;";
+        RawSql rawSql = RawSqlBuilder.parse(sql).create();
+        return find.setRawSql(rawSql).findList();
     }
 
     public static void create(Loc loc) {

@@ -265,6 +265,7 @@ public class Application extends Controller {
             checkInJson.put("id", checkin.id);
             checkInJson.put("name", checkin.name);
             checkInJson.put("shout", checkin.shout);
+            checkInJson.put("score", checkin.score);
             checkInJson.put("loc", locJson);
             checkInJson.put("user", userJson);
 
@@ -349,6 +350,7 @@ public class Application extends Controller {
             checkInJson.put("id", checkin.id);
             checkInJson.put("name", checkin.name);
             checkInJson.put("shout", checkin.shout);
+            checkInJson.put("score", checkin.score);
             checkInJson.put("loc", locJson);
             checkInJson.put("user", userJson);
 
@@ -379,6 +381,28 @@ public class Application extends Controller {
         statusJson.put("status", STATUS_OK);
         statusJson.put("message", "checkin score = " + score);
         result.put("ok", statusJson);
+        return ok(result);
+    }
+
+    public static Result listBusinessLocation() {
+        ObjectNode result = Json.newObject();
+        ArrayNode array = new ArrayNode(JsonNodeFactory.instance);
+        List<Loc> list = Loc.getBusinessLoc();
+        for (Loc loc : list) {
+            ObjectNode locJson = Json.newObject();
+            locJson.put("address", loc.address);
+            locJson.put("city", loc.city);
+            locJson.put("id", loc.id);
+            locJson.put("lat", loc.lat);
+            locJson.put("lng", loc.lng);
+            locJson.put("name", loc.name);
+            locJson.put("nation", loc.nation);
+            locJson.put("province", loc.province);
+            locJson.put("type", loc.type);
+
+            array.add(locJson);
+        }
+        result.put("ok", array);
         return ok(result);
     }
 
