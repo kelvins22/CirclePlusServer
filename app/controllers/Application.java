@@ -116,6 +116,7 @@ public class Application extends Controller {
         userJson.put("checkinCount", auth.checkin_count);
         userJson.put("followerCount", auth.follower_count);
         userJson.put("friendCount", auth.friend_count);
+        userJson.put("isBusiness", auth.is_business);
         // set user JSON as result content
         result.put("ok", userJson);
         return ok(result);
@@ -247,6 +248,7 @@ public class Application extends Controller {
             locJson.put("province", loc.province);
             locJson.put("type", loc.type);
 
+            /*
             User user = User.find.ref(checkin.user_id);
             ObjectNode userJson = Json.newObject();
             userJson.put("checkinCount", user.checkin_count);
@@ -259,6 +261,7 @@ public class Application extends Controller {
             userJson.put("name", user.name);
             userJson.put("phone", user.phone);
             userJson.put("photo", user.photo);
+            */
 
             ObjectNode checkInJson = Json.newObject();
             checkInJson.put("created", checkin.created.toString());
@@ -267,7 +270,7 @@ public class Application extends Controller {
             checkInJson.put("shout", checkin.shout);
             checkInJson.put("score", checkin.score);
             checkInJson.put("loc", locJson);
-            checkInJson.put("user", userJson);
+            // checkInJson.put("user", userJson);
 
             array.add(checkInJson);
         }
